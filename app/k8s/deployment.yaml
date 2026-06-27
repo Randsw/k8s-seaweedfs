@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seaweedfs-app
+  namespace: app
+  labels:
+    app: seaweedfs-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-app
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-app
+    spec:
+      containers:
+      - name: seaweedfs-app
+        image: ghcr.io/randsw/k8s-seaweedfs:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: S3_ENDPOINT
+          value: "http://seaweedfs-s3:8333"
+        - name: S3_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: example-user-s3-secret
+              key: accessKey
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: example-user-s3-secret
+              key: secretKey

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs-app-service
+  namespace: app
+  labels:
+    app: seaweedfs-app
+spec:
+  selector:
+    app: seaweedfs-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
