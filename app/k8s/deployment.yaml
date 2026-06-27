@@ -18,11 +18,12 @@ spec:
       containers:
       - name: seaweedfs-app
         image: ghcr.io/randsw/k8s-seaweedfs:latest
+        imagePullPolicy: Always 
         ports:
         - containerPort: 8080
         env:
         - name: S3_ENDPOINT
-          value: "http://seaweedfs-s3:8333"
+          value: "http://seaweed-app-s3:8333"
         - name: S3_API_KEY
           valueFrom:
             secretKeyRef:

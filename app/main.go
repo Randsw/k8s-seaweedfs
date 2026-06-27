@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -25,33 +24,32 @@ var (
 )
 
 func initS3() {
-	// 1. Загружаем базовую конфигурацию с регионами и ключами
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion("us-east-1"), // Регион обязателен для SDK, но SeaweedFS его игнорирует
+		config.WithRegion("us-east-1"),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(s3APIKey, s3SecretKey, "")),
 	)
 	if err != nil {
 		log.Fatalf("failed to load AWS config: %v", err)
 	}
 
-	// 2. Создаем клиент S3 и передаем endpoint напрямую в настройки клиента
 	s3Client = s3.NewFromConfig(cfg, func(o *s3.Options) {
 		if s3Endpoint != "" {
 			o.BaseEndpoint = aws.String(s3Endpoint)
 		}
-		// UsePathStyle заменяет HostnameImmutable для корректной адресации в SeaweedFS (bucket/object вместо bucket.host/object)
 		o.UsePathStyle = true
 	})
 }
 
 func generateHandler(w http.ResponseWriter, r *http.Request) {
-	// create 100 objects with simple content
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("object-%03d.txt", i)
+		content := fmt.Sprintf("content of %s", key)
+
+		// Use strings.NewReader which implements io.ReadSeeker
 		_, err := s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 			Bucket: aws.String(bucketName),
 			Key:    aws.String(key),
-			Body:   io.NopCloser(strings.NewReader(fmt.Sprintf("content of %s", key))),
+			Body:   strings.NewReader(content), // This is seekable
 		})
 		if err != nil {
 			http.Error(w, "failed to put object: "+err.Error(), http.StatusInternalServerError)
